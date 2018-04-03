@@ -1,0 +1,63 @@
+require 'erb'
+require 'ostruct'
+
+Vagrant.configure("2") do |config|
+
+  vagrant_config = YAML.load_file(File.open("vagrant.yml"))
+  http_proxy = vagrant_config['http_proxy']
+  https_proxy = vagrant_config['https_proxy']
+  ftp_proxy = vagrant_config['ftp_proxy']
+  no_proxy = vagrant_config['no_proxy']
+  host_ip = vagrant_config['host_ip']
+  timeStamp = Time.now.strftime("%Y_%m_%d_%H_%M_%S_%L")
+
+
+  #puts "http_proxy :"+http_proxy
+  #puts "https_proxy:"+https_proxy
+  #puts "ftp_proxy  :"+ftp_proxy
+  #puts "no_proxy   :"+no_proxy
+  #puts "timeStamp  : " + timeStamp
+
+
+  namespace = OpenStruct.new( time_stamp:timeStamp, http_proxy: http_proxy, https_proxy: https_proxy, ftp_proxy: ftp_proxy, no_proxy:no_proxy )
+  curlrc_settings = ERB.new(File.read("vagrant-scripts/templates/.curlrc")).result(namespace.instance_eval { binding })
+  wgetrc_settings = ERB.new(File.read("vagrant-scripts/templates/.wgetrc")).result(namespace.instance_eval { binding })
+  apt_conf_settings = ERB.new(File.read("vagrant-scripts/templates/apt.conf")).result(namespace.instance_eval { binding })
+
+
+  open('vagrant-scripts/build/.curlrc', 'w') do |f|
+    f.puts curlrc_settings
+  end
+  open('vagrant-scripts/build/.wgetrc', 'w') do |f|
+      f.puts wgetrc_settings
+    end
+  open('vagrant-scripts/build/apt.conf', 'w') do |f|
+      f.puts apt_conf_settings
+  end
+
+  config.vm.provider 'virtualbox' do |v|
+    v.memory = 1536
+    v.cpus = 1
+  end
+
+
+  devvm_disk = 'devvm.vdi'
+
+  config.vm.define :devvm do |box|
+      box.vm.box = "ubuntu/trusty64"
+      box.vm.network :private_network, ip: host_ip
+      box.vm.host_name = "ubuntu-elasticsearch-test"
+      box.vm.synced_folder "vagrant-scripts/build/", "/tmp/vagrant-scripts/build/"
+
+      config.vm.provider 'virtualbox' do |v|
+        v.memory = 2048
+        v.cpus = 1
+      end
+      config.ssh.username = "vagrant"
+      config.ssh.password = "vagrant"
+      config.ssh.insert_key = true
+
+      config.vm.provision :shell, :path => "vagrant-scripts/templates/proxy-provisioner.sh"
+
+  end
+end
