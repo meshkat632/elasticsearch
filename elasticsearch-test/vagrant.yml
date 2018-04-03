@@ -1,5 +1,5 @@
 host_ip:       192.168.1.48
-http_proxy:    http://anwer:671984Anujhumu12@bluecoat.media-saturn.com:80
-https_proxy:   http://anwer:671984Anujhumu12@bluecoat.media-saturn.com:80
-ftp_proxy:     http://anwer:671984Anujhumu12@bluecoat.media-saturn.com:80
+http_proxy:    http://proxyUserName:proxyUserPassword@bluecoat.media-saturn.com:80
+https_proxy:   http://proxyUserName:proxyUserPassword@bluecoat.media-saturn.com:80
+ftp_proxy:     http://proxyUserName:proxyUserPassword@bluecoat.media-saturn.com:80
 no_proxy:      localhost|192.168.1.*|127.0.0.1|*.media-saturn.com|*.mesa.nexinto.com
